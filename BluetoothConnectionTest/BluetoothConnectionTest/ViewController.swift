@@ -21,25 +21,37 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         // Status Barの高さを取得する.
         let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
-        
         // Viewの高さと幅を取得する.
-        let displayWidth: CGFloat = self.view.frame.width
-        let displayHeight: CGFloat = self.view.frame.height
+        let displayWidth: CGFloat = self.view.frame.width - 20
+        let displayHeight: CGFloat = self.view.frame.height - 20
         
         // TableViewの生成(Status barの高さをずらして表示).
-        connectionList = UITableView(frame: CGRect(x: 0, y: barHeight, width: displayWidth, height: displayHeight))
-        
+        connectionList = UITableView(frame: CGRect(x:10, y: barHeight + 10, width: displayWidth, height: displayHeight))
+        connectionList.rowHeight = 30
         // Cell名の登録をおこなう.
         connectionList.register(UITableViewCell.self, forCellReuseIdentifier: "MyCell")
-        
         // DataSourceを自身に設定する.
         connectionList.dataSource = self
-        
         // Delegateを自身に設定する.
         connectionList.delegate = self
-        
         // Viewに追加する.
         self.view.addSubview(connectionList)
+        
+        let blueToothSwicth: UISwitch = UISwitch()
+        blueToothSwicth.layer.position = CGPoint(x: 0, y: 0)
+
+        // Swicthの枠線を表示する.
+        blueToothSwicth.tintColor = UIColor.black
+        
+        // SwitchをOnに設定する.
+        blueToothSwicth.isOn = true
+        
+        // SwitchのOn/Off切り替わりの際に、呼ばれるイベントを設定する.
+        blueToothSwicth.addTarget(self, action: Selector(("onClickMySwicth:")), for: UIControlEvents.valueChanged)
+        
+        // SwitchをViewに追加する.
+        self.view.addSubview(blueToothSwicth)
+        
     }
 
     override func didReceiveMemoryWarning() {
