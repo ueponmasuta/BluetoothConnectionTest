@@ -11,10 +11,17 @@ import UIKit
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
 
     /// test用配列
-    var arr = ["test1", "test2", "test3"]
+    var arr = [""]
     
-    /// Bluetooth接続先リスト
+    var sectionName = ["　"]
+    
+    /// UIパーツ
     var connectionList: UITableView!
+    var bluetoothSwitch:UISwitch = UISwitch()
+    
+    /// 定数
+    let titleName = ["Bluetooth"]
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -22,12 +29,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         // Status Barの高さを取得する.
         let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
         // Viewの高さと幅を取得する.
-        let displayWidth: CGFloat = self.view.frame.width - 20
-        let displayHeight: CGFloat = self.view.frame.height - 20
+        let displayWidth: CGFloat = self.view.frame.width
+        let displayHeight: CGFloat = self.view.frame.height
         
         // TableViewの生成(Status barの高さをずらして表示).
-        connectionList = UITableView(frame: CGRect(x:10, y: barHeight + 10, width: displayWidth, height: displayHeight))
-        connectionList.rowHeight = 30
+        connectionList = UITableView(frame: CGRect(x:0, y: barHeight, width: displayWidth, height: displayHeight - barHeight))
+        // Cellの高さを設定
+        connectionList.rowHeight = 50
         // Cell名の登録をおこなう.
         connectionList.register(UITableViewCell.self, forCellReuseIdentifier: "MyCell")
         // DataSourceを自身に設定する.
@@ -36,22 +44,6 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         connectionList.delegate = self
         // Viewに追加する.
         self.view.addSubview(connectionList)
-        
-        let blueToothSwicth: UISwitch = UISwitch()
-        blueToothSwicth.layer.position = CGPoint(x: 0, y: 0)
-
-        // Swicthの枠線を表示する.
-        blueToothSwicth.tintColor = UIColor.black
-        
-        // SwitchをOnに設定する.
-        blueToothSwicth.isOn = true
-        
-        // SwitchのOn/Off切り替わりの際に、呼ばれるイベントを設定する.
-        blueToothSwicth.addTarget(self, action: Selector(("onClickMySwicth:")), for: UIControlEvents.valueChanged)
-        
-        // SwitchをViewに追加する.
-        self.view.addSubview(blueToothSwicth)
-        
     }
 
     override func didReceiveMemoryWarning() {
@@ -59,6 +51,20 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         // Dispose of any resources that can be recreated.
     }
 
+    /*
+     セクションの数を返す.
+     */
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return sectionName.count
+    }
+    
+    /*
+     セクションのタイトルを返す.
+     */
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return sectionName[section]
+    }
+    
     /*
      Cellが選択された際に呼び出される
      */
@@ -71,7 +77,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
      Cellの総数を返す.
      */
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return arr.count
+        if section == 0 {
+            return titleName.count
+        } else if section == 1 {
+            return arr.count
+        } else {
+            return 0
+        }
     }
     
     /*
@@ -81,12 +93,33 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         // 再利用するCellを取得する.
         let cell = tableView.dequeueReusableCell(withIdentifier: "MyCell", for: indexPath as IndexPath)
         
-        // Cellに値を設定する.
-        cell.textLabel!.text = "\(arr[indexPath.row])"
+        if indexPath.section == 0 {
+            if (cell.accessoryView == nil) {
+                cell.accessoryView = bluetoothSwitch
+                bluetoothSwitch.addTarget(self, action: #selector(changeSwitch(sender:)), for: UIControlEvents.valueChanged)
+            }
+            cell.textLabel!.text = "\(titleName[indexPath.row])"
         
+        } else if indexPath.section == 1 {
+            // Cellに値を設定する.
+            cell.textLabel!.text = "\(arr[indexPath.row])"
+        }
         return cell
     }
 
+    /*
+     Switchを変更する
+     */
+    func changeSwitch(sender: UISwitch){
+        if sender.isOn {
+            arr = ["test1", "test2", "test3"]
+            sectionName = ["　", "myDevice"]
+        } else {
+            arr = []
+            sectionName = ["　"]
+        }
+        connectionList.reloadData()
+    }
 
 }
 
