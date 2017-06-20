@@ -10,19 +10,25 @@ import UIKit
 
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
 
-    /// test用配列
-    var arr = [""]
-    
-    var sectionName = ["　"]
-    
     /// UIパーツ
     var connectionList: UITableView!
     var bluetoothSwitch:UISwitch = UISwitch()
+    /// BLE制御
+    var centralManager: BLEManager = BLEManager()
     
+    /// タイマー
+    var timer:Timer!
+
     /// 定数
     let titleName = ["Bluetooth"]
     
+    /// 配列
+    var connectionName:[String] = []
+    var sectionName = ["　"]
     
+    /// 画面パラメータ保持
+    var switchFlag:Bool = false
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -44,6 +50,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         connectionList.delegate = self
         // Viewに追加する.
         self.view.addSubview(connectionList)
+        
+        // timerの設定
+        timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(self.tableUpdate), userInfo: nil, repeats: true)
     }
 
     override func didReceiveMemoryWarning() {
@@ -66,11 +75,14 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     
     /*
-     Cellが選択された際に呼び出される
+     Cellが選択された際に呼び出される.
      */
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        // デバッグ用
         print("Num: \(indexPath.row)")
-        print("Value: \(arr[indexPath.row])")
+        print("Value: \(connectionName[indexPath.row])")
+        // ペリフェラルへ接続
+        centralManager.connectPeripheral(selectRow: indexPath.row)
     }
     
     /*
@@ -80,14 +92,15 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         if section == 0 {
             return titleName.count
         } else if section == 1 {
-            return arr.count
+            print("接続先数: \(connectionName.count)")
+            return connectionName.count
         } else {
             return 0
         }
     }
     
     /*
-     Cellに値を設定する
+     Cellに値を設定する.
      */
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         // 再利用するCellを取得する.
@@ -102,24 +115,47 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         } else if indexPath.section == 1 {
             // Cellに値を設定する.
-            cell.textLabel!.text = "\(arr[indexPath.row])"
+            cell.textLabel!.text = "\(connectionName[indexPath.row])"
         }
         return cell
     }
 
     /*
-     Switchを変更する
+     Switchを変更する.
      */
     func changeSwitch(sender: UISwitch){
-        if sender.isOn {
-            arr = ["test1", "test2", "test3"]
+        guard self.switchFlag != sender.isOn else {
+            print("switchFlag : \(switchFlag)")
+            // ON/OFFに変更がなければ処理をしない
+            return
+        }
+        
+        switchFlag = sender.isOn
+        if switchFlag {
+            // Bluetoothの接続先検索を開始する
+            centralManager.initCentralManager()
+            // timer開始
+            timer.fire()
+            // セクションを表示する
             sectionName = ["　", "myDevice"]
         } else {
-            arr = []
+            // Bluetoothの接続先検索を終了する
+            centralManager.stopPeripheralScan()
+            // timerを停止
+            timer.invalidate()
+            // 画面表示のリセット
+            connectionName = []
             sectionName = ["　"]
         }
         connectionList.reloadData()
     }
 
+    /*
+     テーブルを更新する.
+     */
+    func tableUpdate () {
+        self.connectionName = centralManager.names
+        self.connectionList.reloadData()
+    }
 }
 
